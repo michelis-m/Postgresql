@@ -29,3 +29,17 @@ from information_schema.tables
 where table_type = 'BASE TABLE'
 and table_schema = 'public'
 and table_name like 'adjusted_%';
+
+-------------------------------------------------------------------------------------------
+INSERT INTO canonical_dfa.advertiser
+WITH C AS (
+	select *
+	from canonical_dfa.stg_advertiser a
+	where dan_batch_id = 730676 
+	AND NOT EXISTS 
+	(select *
+	from canonical_dfa.advertiser b 
+	where a.advertiser_id=b.advertiser_id or a.advertiser = b.advertiser
+	)
+)
+SELECT * From C;
