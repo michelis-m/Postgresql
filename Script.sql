@@ -31,15 +31,27 @@ and table_schema = 'public'
 and table_name like 'adjusted_%';
 
 -------------------------------------------------------------------------------------------
-INSERT INTO canonical_dfa.advertiser
+INSERT INTO canonical_dfa.advertiser_swap
+(advertiser, advertiser_id, dan_row_start_date)
 WITH C AS (
 	select *
-	from canonical_dfa.stg_advertiser a
+	from canonical_dfa.advertiser_temp a
 	where dan_batch_id = 730676 
-	AND NOT EXISTS 
-	(select *
-	from canonical_dfa.advertiser b 
-	where a.advertiser_id=b.advertiser_id or a.advertiser = b.advertiser
+	AND (
+		NOT EXISTS 
+		(select *
+		from canonical_dfa.stg_advertiser_temp b 
+		where a.advertiser_id=b.advertiser_id
+		)
+		OR NOT EXISTS(select *
+		from canonical_dfa.stg_advertiser_temp b 
+		where a.advertiser=b.advertiser
+		) 
 	)
+),
+CTE AS (
+	SELECT advertiser,advertiser_id, Max(dan_row_start_date) as maxd
+	FROM (SELECT * FROM C UNION ALL SELECT * FROM canonical_dfa.advertiser_temp) as d
+	group by advertiser,advertiser_id
 )
-SELECT * From C;
+SELECT advertiser,advertiser_id, maxd from CTE
