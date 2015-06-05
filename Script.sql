@@ -56,3 +56,16 @@ CTE AS (
 	group by advertiser,advertiser_id
 )
 SELECT advertiser,advertiser_id, maxd from CTE
+
+-----------   CBA    ----------------------------------------------------------------------
+
+WITH CTE AS
+(
+	SELECT * FROM canonical_dfa.stg_advertiser_temp
+	UNION
+	SELECT * FROM canonical_dfa.advertiser_temp
+), CTE2 AS
+(
+SELECT RANK() OVER (PARTITION BY advertiser_id ORDER BY dan_row_start_date desc) AS rnk,* FROM CTE
+)
+SELECT * FROM CTE2 WHERE rnk=1
