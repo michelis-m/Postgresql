@@ -20,9 +20,10 @@ SELECT * FROM C WHERE n>1
 
 ------------------- Counts 2 ----------------------------------------------------
 
-select count(1),count(distinct dan_sequence_Id) from [schema][dot][table] having count(1)<>count(distinct dan_sequence_Id) ;
+select count(1) AS RowsCount,count(distinct site_id) AS UniqueRows,(count(1) - count(distinct site_id)) AS Duplicates 
+from pdw.site having count(1)<>count(distinct site_id) ; 
 
-
+-------------------------------------------------------------------------------------------
 
 select 'select count(1),count(distinct dan_sequence_Id) from '||table_schema||'.'||table_name||' having count(1)<>count(distinct dan_sequence_Id)'||' union'
 from information_schema.tables
