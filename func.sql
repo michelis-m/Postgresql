@@ -28,3 +28,34 @@ END IF;
 
 end
 ';
+
+---------------------------------------------------------------------------------------------------------------
+
+create function startx6(t_id int)
+returns table(a int, b int)
+as
+$body$ 
+begin
+--while end loop;
+IF EXISTS( --The following query checks for given task_id, if the batches for task days are on status 14
+with cte as (
+        select count(1) ct,tl.task_id from dan_control.task_lookback tl --selecting the count of tasks in status 1 and relevant date
+        inner join dan_control.job j on j.task_id=tl.task_id 
+        where j.task_id = t_id 
+        and status_id = 14
+        and task_date >= (select date_trunc('day',now()) -(days * interval '1 day')
+                                        from dan_control.task_lookback
+                                                where task_id = t_id ) 
+        group by tl.task_id
+)select days from dan_control.task_lookback tl  --comparing the number of count with the number of days for this task
+inner join cte on cte.task_id = tl.task_id
+where tl.task_id = t_id and tl.days = cte.ct )  IS TRUE 
+THEN    
+                return query select 201760000 task_id, b_id batch_id;
+--execute task 20176000 if criteria are completed
+end if; 
+end;    
+$body$                                  
+LANGUAGE plpgsql; 
+
+
