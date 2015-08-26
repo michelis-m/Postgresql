@@ -69,3 +69,8 @@ WITH CTE AS
 SELECT RANK() OVER (PARTITION BY advertiser_id ORDER BY dan_row_start_date desc) AS rnk,* FROM CTE
 )
 SELECT * FROM CTE2 WHERE rnk=1
+
+
+-----------regexp-----------------------------
+select sql_clob,regexp_matches(sql_clob,'\"(\d{6})\"\,\"(\d{6})\"\,\"(\d{6})\"\,\"(\d{6})\"\,\"(\d{6})\"', 'g') 
+from dan_control.sql_task where task_id = 201760000 and task_sequence = 1
