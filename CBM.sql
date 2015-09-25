@@ -84,11 +84,36 @@ SELECT #foreach ($attribute in $listAttributes) $attribute, #end
 
 ------------------------ Creating View ------------------------------------------
 
-CREATE OR REPLACE VIEW $schema.$table${underscore}view AS
-SELECT #foreach ($attribute in $listAttributes) $attribute, #end
-			#foreach ($dan in $dan) $dan, #end
+
+#set ( $schema = "canonical_dfa")
+
+#set ( $version = $batchId )
+#set ( $dot = ".")
+#set ( $underscore = "_")
+#set ($dan = ["dan_row_start_date","dan_row_end_date", "dan_batch_id", "dan_previous_batch_id", "dan_row_active"])
+
+
+#set( $labelgroup = "any_tx" )
+#set( $label = "$labelgroup${underscore}999205.001" )
+SET QUERY_GROUP='$label${underscore}$batchId';
+
+
+CREATE OR REPLACE VIEW $schema.$table${underscore}cbmview AS
+WITH CTE AS
+(
+  SELECT RANK() OVER (PARTITION BY #foreach($key in $listKeys) #if ($foreach.last) $key #else $key, #end#end ORDER BY dan_row_start_date DESC) AS dan_row_active , 
+	isnull(LAG(dan_batch_id)OVER (PARTITION BY #foreach($key in $listKeys) #if ($foreach.last) $key #else $key, #end#end ORDER BY dan_row_start_date) ,dan_batch_id) AS dan_previous_batch_id,
+	isnull(DATEADD('days',-1,LEAD(dan_row_start_date)OVER (PARTITION BY #foreach($key in $listKeys) #if ($foreach.last) $key #else $key, #end#end ORDER BY dan_row_start_date)),'9999-01-01')dan_row_end_date,
+			#foreach ($attribute in $listAttributes) $attribute, #end
+			#foreach ($dan in $dan) #if($dan != "dan_previous_batch_id"&& $dan != "dan_row_end_date"&& $dan != "dan_row_active" )  $dan, #end #end
 			#foreach($key in $listKeys) #if ($foreach.last) $key #else $key, #end #end
-			FROM $schema.$table;
+  FROM $schema${dot}$table
+  ) 
+ SELECT 
+#foreach ($attribute in $listAttributes) $attribute, #end
+#foreach ($dan in $dan)  $dan, #end
+#foreach($key in $listKeys) #if ($foreach.last) $key #else $key, #end #end 
+FROM CTE WHERE dan_row_active=1;
 
 
 
